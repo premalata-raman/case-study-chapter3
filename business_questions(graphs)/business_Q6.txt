@@ -1,0 +1,31 @@
+1. Ensure Data Completeness
+Current Observation: Missing or incomplete values can lead to inaccurate analysis, as seen in columns like price, promo_price, and date in your dataset.
+Improvement Suggestion:
+Implement validation checks during data entry to ensure all fields are filled.
+Use default or estimated values for mandatory fields (e.g., assign a default price for missing products based on category).
+
+2. Improve Data Consistency
+Current Observation: Inconsistent data formats (e.g., price and promo_price as strings instead of numeric) required coercion and cleaning.
+Improvement Suggestion:
+Standardize formats for dates, numeric values, and categorical data at the source (e.g., ensuring numeric fields only accept numbers).
+Use dropdowns or predefined options for categorical fields like event, type, or state.
+
+3. Capture Additional Attributes
+Current Observation: Limited attributes for deep analysis (e.g., no demographic data for customers, no product categories).
+Improvement Suggestion:
+Collect additional data points such as:
+Customer demographics: Age, gender, location, preferences.
+Sales channels: Online, in-store, third-party platforms.
+Product metadata: Categories (electronics, clothing, etc.), brands, suppliers.
+
+4. Real-Time or Periodic Data Updates
+Current Observation: The dataset appears static, possibly requiring manual updates or aggregation.
+Improvement Suggestion:
+Implement systems to collect data in real-time (e.g., from sales transactions or website logs).
+Automate periodic data exports from systems like POS (Point of Sale) or ERP (Enterprise Resource Planning).
+
+5. Track Event-Specific Sales
+Current Observation: Event-driven sales analysis (e.g., Black Friday, Christmas) requires manual tagging.
+Improvement Suggestion:
+Automatically tag sales data with relevant events based on date ranges.
+Create a dedicated column to classify transactions as "Event-Based" or "Regular" at the point of data collection.
