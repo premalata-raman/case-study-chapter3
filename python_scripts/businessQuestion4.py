@@ -24,25 +24,18 @@ mergeData['discount_category'] = pd.cut(mergeData['discount_percentage'], bins=b
 # Count the products in each discount category
 discount_distribution = mergeData['discount_category'].value_counts().sort_index()
 
-# Define custom colors for each bar
-colors = ['#FF9999', '#FFCC99', '#FFFF99', '#CCFF99', '#99FF99', '#99CCFF']
-
-# Plot the distribution as a bar chart
+# Plot the distribution as a line chart
 plt.figure(figsize=(10, 6))
-bars = plt.bar(discount_distribution.index, discount_distribution.values, color=colors)
+plt.plot(discount_distribution.index.astype(str), discount_distribution.values, marker='o', linestyle='-', color='blue')
 plt.title('Distribution of Discounts as a Percentage of Product Prices')
 plt.xlabel('Discount Percentage Categories')
 plt.ylabel('Number of Products')
 plt.xticks(rotation=45)
 
-# Add data labels on top of each bar
-for bar in bars:
-    plt.text(
-        bar.get_x() + bar.get_width() / 2,  # Center the label
-        bar.get_height(),                  # Position at the top of the bar
-        f'{int(bar.get_height()):,}',      # Format the label with commas
-        ha='center', va='bottom', fontsize=10
-    )
+# Add data labels on each point
+for x, y in zip(discount_distribution.index, discount_distribution.values):
+    plt.text(x, y, f'{int(y):,}', ha='center', va='bottom', fontsize=10)
 
 plt.tight_layout()
 plt.show()
+

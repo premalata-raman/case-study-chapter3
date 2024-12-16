@@ -1,47 +1,78 @@
 import pandas as pd
 import matplotlib.pyplot as plt
-import matplotlib.ticker as ticker
 
 # Load the provided data
 file_path = r'C:\Users\prema\Desktop\WBS DA06\DA06 exercises\case study csv\csvs\merged_data.csv'
 mergeData = pd.read_csv(file_path)
 
-# Convert 'date' column to datetime
-mergeData['date'] = pd.to_datetime(mergeData['date'], errors='coerce')
+# Convert 'promo_price' and 'price' to numeric
+mergeData['promo_price'] = pd.to_numeric(mergeData['promo_price'], errors='coerce')
+mergeData['price'] = pd.to_numeric(mergeData['price'], errors='coerce')
 
-# Filter valid dates
-mergeData = mergeData.dropna(subset=['date'])
+# Ensure there are no missing values (optional, handle NaN appropriately)
+mergeData = mergeData.dropna(subset=['promo_price', 'price'])
 
-# Add columns for month and day for seasonality analysis
-mergeData['month'] = mergeData['date'].dt.month
-mergeData['day'] = mergeData['date'].dt.day
+# Convert the 'date' column to datetime
+mergeData['date'] = pd.to_datetime(mergeData['date'])
 
-# Identify special event periods (e.g., Black Friday, Christmas)
-mergeData['event'] = 'Regular'
-mergeData.loc[(mergeData['month'] == 11) & (mergeData['day'] >= 23) & (mergeData['day'] <= 29), 'event'] = 'Black Friday'
-mergeData.loc[(mergeData['month'] == 12) & (mergeData['day'] >= 20), 'event'] = 'Christmas'
+# Define Black Friday and Christmas date ranges
+black_friday_dates = mergeData[
+    (mergeData['date'].dt.month == 11) & 
+    (mergeData['date'].dt.weekday == 4) & 
+    (mergeData['date'].dt.day >= 23) & 
+    (mergeData['date'].dt.day <= 29)
+]
 
-# Group by event type and calculate total sales using 'total_paid'
-mergeData['total_paid'] = pd.to_numeric(mergeData['total_paid'], errors='coerce')  # Ensure it's numeric
-sales_by_event = mergeData.groupby('event')['total_paid'].sum()
+christmas_dates = mergeData[
+    (mergeData['date'].dt.month == 12) & 
+    (mergeData['date'].dt.day >= 20) & 
+    (mergeData['date'].dt.day <= 26)
+]
 
-# Plot sales for special events
-colors = ['#FF9999', '#FFCC99', '#99CCFF']
-plt.figure(figsize=(8, 6))
-bars = sales_by_event.plot(kind='bar', color=colors, title="Sales Impact of Seasonality and Special Dates")
-plt.xlabel("Event")
-plt.ylabel("Total Sales")
-plt.xticks(rotation=0)
+# Label events and combine datasets
+black_friday_dates['event'] = 'Black Friday'
+christmas_dates['event'] = 'Christmas'
+event_sales = pd.concat([black_friday_dates, christmas_dates])
 
-# Explicitly set x-tick labels for the event categories
-plt.xticks(ticks=range(len(sales_by_event)), labels=sales_by_event.index)
+# Aggregate sales by day for each event type
+event_sales['day'] = event_sales['date'].dt.date  # Convert to date format
+sales_by_day = event_sales.groupby(['day', 'event'])['promo_price'].sum().unstack()
 
-# Add data labels on top of each bar
-for index, value in enumerate(sales_by_event):
-    plt.text(index, value, f'{value:,.2f}', ha='center', va='bottom', fontsize=10, fontweight='bold')
+# Ensure total sales are whole numbers
+sales_by_day = sales_by_day.fillna(0).astype(int)
 
-# Format y-axis to plain numbers
-plt.gca().yaxis.set_major_formatter(ticker.StrMethodFormatter('{x:,.0f}'))
+# Plot the comparison of sales between Black Friday and Christmas events
+plt.figure(figsize=(12, 6))
 
+# Plot Black Friday sales only on relevant days
+if 'Black Friday' in sales_by_day.columns:
+    plt.plot(
+        sales_by_day.index[sales_by_day['Black Friday'] > 0],
+        sales_by_day['Black Friday'][sales_by_day['Black Friday'] > 0],
+        marker='o', linestyle='-', label='Black Friday'
+    )
+
+# Plot Christmas sales only on relevant days
+if 'Christmas' in sales_by_day.columns:
+    plt.plot(
+        sales_by_day.index[sales_by_day['Christmas'] > 0],
+        sales_by_day['Christmas'][sales_by_day['Christmas'] > 0],
+        marker='o', linestyle='-', label='Christmas'
+    )
+
+# Add data labels on the points
+for event in sales_by_day.columns:
+    for x, y in zip(
+        sales_by_day.index[sales_by_day[event] > 0],
+        sales_by_day[event][sales_by_day[event] > 0]
+    ):
+        plt.text(x, y, f'{y:,}', ha='center', va='bottom', fontsize=10)
+
+plt.title('Sales Comparison: Black Friday vs Christmas Event')
+plt.xlabel('Date')
+plt.ylabel('Total Sales')
+plt.legend(title='Event')
+plt.xticks(rotation=45)
 plt.tight_layout()
+
 plt.show()
